@@ -20,4 +20,9 @@ const weeklySchedule = [
     title: "예시 일정",
     body: "이번 주 일정만 표시됩니다.",
   },
+  {
+    date: "5/27",
+    title: "단합",
+    body: "단합 대회가 있습니다. 반티를 입고 오세요.",
+  },
 ];
