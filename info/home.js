@@ -16,8 +16,8 @@ const timetable = {
 
 const weeklySchedule = [
   {
-    date: "5/24",
-    title: "예시 일정",
-    body: "이번 주 일정만 표시됩니다.",
-  },
+    "date": "5/24",
+    "title": "예시 일정",
+    "body": "이번 주 일정만 표시됩니다."
+  }
 ];
