@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../scrollbar.css" />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 18px;
+        background: transparent;
+        font-family: "Pretendard", "Malgun Gothic", sans-serif;
+        color: #1a2540;
+      }
+
+      .article-shell {
+        display: grid;
+        gap: 16px;
+      }
+
+      .article-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .article-btn {
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        background: white;
+        border-radius: 18px;
+        padding: 16px;
+        text-align: left;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(88, 109, 165, 0.06);
+      }
+
+      .article-title {
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .article-date {
+        margin-top: 6px;
+        font-size: 14px;
+        color: #657393;
+        font-weight: 700;
+      }
+
+      .viewer {
+        display: none;
+        gap: 14px;
+      }
+
+      .viewer.active {
+        display: grid;
+      }
+
+      .viewer-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        background: white;
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        border-radius: 18px;
+        padding: 12px;
+      }
+
+      .viewer-title {
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .page-info {
+        margin-top: 4px;
+        font-size: 14px;
+        color: #657393;
+        font-weight: 800;
+      }
+
+      .viewer-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .viewer-btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 9px 12px;
+        background: #eef3ff;
+        color: #4e69ba;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .page-stage {
+        overflow: auto;
+        background: #f4f7ff;
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        border-radius: 22px;
+        padding: 18px;
+        min-height: 500px;
+        text-align: center;
+      }
+
+      .page-image {
+        width: 100%;
+        max-width: none;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 10px 28px rgba(70, 90, 140, 0.18);
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+
+      .empty-state {
+        border: 1px dashed rgba(122, 143, 191, 0.24);
+        border-radius: 20px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.7);
+        color: #73819d;
+        text-align: center;
+      }
+      .newspaper-viewer {
+        overflow: hidden;
+        cursor: grab;
+      }
+
+      .newspaper-viewer.dragging {
+        cursor: grabbing;
+      }
+
+      .newspaper-inner {
+        user-select: none;
+        transform-origin: 0 0;
+      }
+      .page-stage {
+        overflow: auto;
+        background: #f4f7ff;
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        border-radius: 22px;
+        padding: 18px;
+        height: calc(100vh - 230px);
+        min-height: 500px;
+
+        cursor: grab;
+        overscroll-behavior: contain;
+
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .page-stage.dragging {
+        cursor: grabbing;
+      }
+
+      .page-image {
+        width: 100%;
+        max-width: none;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 10px 28px rgba(70, 90, 140, 0.18);
+        user-select: none;
+        -webkit-user-drag: none;
+        pointer-events: none;
+      }
+    </style>
+
+    <script src="../info/article.js"></script>
+  </head>
+
+  <body oncontextmenu="return false;">
+    <div class="article-shell">
+      <div class="article-list" id="articleList"></div>
+
+      <div class="viewer" id="viewer">
+        <div class="viewer-top">
+          <div>
+            <div class="viewer-title" id="viewerTitle">신문</div>
+            <div class="page-info" id="pageInfo">1 / 1</div>
+          </div>
+
+          <div class="viewer-controls">
+            <button class="viewer-btn" onclick="closeViewer()">BACK</button>
+            <button class="viewer-btn" onclick="prevPage()">←</button>
+            <button class="viewer-btn" onclick="nextPage()">→</button>
+            <button class="viewer-btn" onclick="zoomOut()">-</button>
+            <button class="viewer-btn" onclick="zoomIn()">+</button>
+            <button class="viewer-btn" onclick="resetZoom()">↻</button>
+          </div>
+        </div>
+
+        <div class="page-stage newspaper-viewer" id="pageStage">
+          <img
+            id="pageImage"
+            class="page-image"
+            alt="신문 페이지"
+            draggable="false"
+          />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const articleList = document.getElementById("articleList");
+      const viewer = document.getElementById("viewer");
+      const viewerTitle = document.getElementById("viewerTitle");
+      const pageInfo = document.getElementById("pageInfo");
+      const pageImage = document.getElementById("pageImage");
+      const pageStage = document.getElementById("pageStage");
+
+      let currentArticle = null;
+      let currentPage = 0;
+      let zoom = 1;
+
+      function escapeHtml(text) {
+        return String(text)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+      /* =========================
+   드래그 이동
+========================= */
+
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let scrollLeft = 0;
+      let scrollTop = 0;
+
+      pageStage.addEventListener("mousedown", (e) => {
+        if (zoom <= 1) return;
+
+        isDragging = true;
+        pageStage.classList.add("dragging");
+
+        startX = e.pageX;
+        startY = e.pageY;
+
+        scrollLeft = pageStage.scrollLeft;
+        scrollTop = pageStage.scrollTop;
+
+        e.preventDefault();
+      });
+
+      window.addEventListener("mouseup", () => {
+        isDragging = false;
+        pageStage.classList.remove("dragging");
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+
+        const dx = e.pageX - startX;
+        const dy = e.pageY - startY;
+
+        pageStage.scrollLeft = scrollLeft - dx;
+        pageStage.scrollTop = scrollTop - dy;
+      });
+
+      /* 모바일 터치 드래그 */
+
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchScrollLeft = 0;
+      let touchScrollTop = 0;
+
+      pageStage.addEventListener(
+        "touchstart",
+        (e) => {
+          if (zoom <= 1) return;
+
+          const touch = e.touches[0];
+
+          touchStartX = touch.pageX;
+          touchStartY = touch.pageY;
+
+          touchScrollLeft = pageStage.scrollLeft;
+          touchScrollTop = pageStage.scrollTop;
+        },
+        { passive: true },
+      );
+
+      pageStage.addEventListener(
+        "touchmove",
+        (e) => {
+          if (zoom <= 1) return;
+
+          const touch = e.touches[0];
+
+          const dx = touch.pageX - touchStartX;
+          const dy = touch.pageY - touchStartY;
+
+          pageStage.scrollLeft = touchScrollLeft - dx;
+          pageStage.scrollTop = touchScrollTop - dy;
+        },
+        { passive: true },
+      );
+
+      function renderArticleList() {
+        const list = Array.isArray(articles) ? articles : [];
+
+        if (list.length === 0) {
+          articleList.innerHTML = `
+            <div class="empty-state">등록된 신문이 없습니다.</div>
+          `;
+          return;
+        }
+
+        articleList.innerHTML = list
+          .map(
+            (article, index) => `
+              <button class="article-btn" onclick="openArticle(${index})">
+                <div class="article-title">${escapeHtml(article.title)}</div>
+                <div class="article-date">${escapeHtml(article.date || "")}</div>
+              </button>
+            `,
+          )
+          .join("");
+      }
+
+      function openArticle(index) {
+        const list = Array.isArray(articles) ? articles : [];
+        currentArticle = list[index];
+        currentPage = 0;
+        zoom = 1;
+
+        articleList.style.display = "none";
+        viewer.classList.add("active");
+
+        renderPage();
+      }
+
+      function closeViewer() {
+        viewer.classList.remove("active");
+        articleList.style.display = "grid";
+      }
+
+      function renderPage() {
+        if (!currentArticle || !Array.isArray(currentArticle.pages)) return;
+
+        const pages = currentArticle.pages;
+
+        viewerTitle.textContent = currentArticle.title;
+        pageInfo.textContent = `${currentPage + 1} / ${pages.length}`;
+
+        pageImage.src = pages[currentPage];
+        pageImage.style.transform = `scale(${zoom})`;
+        pageImage.style.transformOrigin = "top center";
+      }
+
+      function prevPage() {
+        if (!currentArticle || currentPage <= 0) return;
+        currentPage--;
+        renderPage();
+      }
+
+      function nextPage() {
+        if (!currentArticle || currentPage >= currentArticle.pages.length - 1)
+          return;
+        currentPage++;
+        renderPage();
+      }
+
+      function zoomIn() {
+        zoom = Math.min(zoom + 0.15, 3);
+        renderPage();
+      }
+
+      function zoomOut() {
+        zoom = Math.max(zoom - 0.15, 0.5);
+        renderPage();
+      }
+
+      function resetZoom() {
+        zoom = 1;
+        renderPage();
+      }
+
+      renderArticleList();
+    </script>
+  </body>
+</html>

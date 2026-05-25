@@ -1,0 +1,76 @@
+/* ===== 전체 스크롤바 ===== */
+
+/* 크롬 / 엣지 */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* 트랙 (배경) */
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 핵심: 유리 + 그라데이션 */
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(180, 200, 255, 0.9),
+    rgba(140, 220, 255, 0.9)
+  );
+
+  /* 유리 느낌 */
+  backdrop-filter: blur(8px);
+
+  /* 안쪽 하이라이트 */
+  box-shadow:
+    inset 0 0 6px rgba(255, 255, 255, 0.6),
+    inset 0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 6px rgba(120, 150, 255, 0.25);
+
+  transition: all 0.25s ease;
+}
+
+/* hover 시 반사 강조 */
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(150, 170, 255, 1),
+    rgba(110, 200, 255, 1)
+  );
+
+  box-shadow:
+    inset 0 0 8px rgba(255, 255, 255, 0.9),
+    inset 0 0 3px rgba(255, 255, 255, 1),
+    0 0 10px rgba(120, 150, 255, 0.5);
+}
+
+/* ===== 파이어폭스 ===== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 180, 255, 0.8) transparent;
+}
+/* thumb 짧게 보이게 */
+*::-webkit-scrollbar-thumb {
+  min-height: 30px;
+  min-width: 30px;
+
+  border-radius: 999px;
+
+  /* 핵심: 위아래 여백 느낌 */
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+mark {
+  background: linear-gradient(135deg, #eef3ff, #dff4ff);
+  color: #2a3f8f;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 800;
+
+  /* 살짝 입체감 */
+  box-shadow:
+    inset 0 0 4px rgba(255, 255, 255, 0.8),
+    0 2px 6px rgba(120, 150, 255, 0.2);
+}

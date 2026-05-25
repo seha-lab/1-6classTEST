@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>생일</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --text: #1a2540;
+        --sub: #657393;
+        --accent: #6d8dff;
+        --accent2: #8fd2ff;
+        --line: rgba(122, 143, 191, 0.14);
+        --shadow: 0 16px 40px rgba(88, 111, 175, 0.12);
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Pretendard", "Malgun Gothic", sans-serif;
+        color: var(--text);
+        background: transparent;
+      }
+
+      body {
+        padding: 6px;
+      }
+
+      .birthday-shell {
+        display: grid;
+        gap: 14px;
+      }
+
+      .birthday-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.96),
+          rgba(244, 248, 255, 0.96)
+        );
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 12px 14px;
+        box-shadow: 0 8px 18px rgba(88, 109, 165, 0.06);
+      }
+
+      .birthday-search,
+      .birthday-sort {
+        border: 1px solid rgba(122, 143, 191, 0.16);
+        border-radius: 14px;
+        background: white;
+        padding: 10px 12px;
+        font: inherit;
+        color: var(--text);
+        outline: none;
+      }
+
+      .birthday-search {
+        flex: 1;
+        min-width: 180px;
+      }
+
+      .birthday-search:focus,
+      .birthday-sort:focus {
+        border-color: rgba(109, 141, 255, 0.45);
+        box-shadow: 0 0 0 3px rgba(109, 141, 255, 0.08);
+      }
+
+      .birthday-meta {
+        font-size: 14px;
+        color: var(--sub);
+        line-height: 1.7;
+        padding: 0 4px;
+        font-weight: 700;
+      }
+
+      .birthday-wrap {
+        display: grid;
+        gap: 20px;
+      }
+
+      .birthday-group {
+        display: grid;
+        gap: 12px;
+      }
+
+      .birthday-group-title {
+        font-size: 19px;
+        font-weight: 900;
+        color: #4d69bc;
+        padding: 0 4px;
+      }
+
+      .birthday-group-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .birthday-card {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.96),
+          rgba(244, 248, 255, 0.96)
+        );
+        border: 1px solid rgba(130, 150, 205, 0.14);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .birthday-card.today {
+        border-color: rgba(109, 141, 255, 0.45);
+        box-shadow:
+          0 16px 40px rgba(88, 111, 175, 0.12),
+          0 0 0 3px rgba(109, 141, 255, 0.08);
+      }
+
+      .birthday-date {
+        display: inline-block;
+        margin-bottom: 10px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #eef3ff, #f1fbff);
+        color: #4d69bc;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .birthday-name {
+        font-size: 22px;
+        font-weight: 900;
+        margin-bottom: 6px;
+      }
+
+      .birthday-note {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #fff8ec, #f7fbff);
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        color: #5b6785;
+        font-size: 14px;
+        line-height: 1.7;
+        font-weight: 700;
+      }
+
+      .birthday-empty {
+        border: 2px dashed rgba(122, 143, 191, 0.22);
+        border-radius: 22px;
+        min-height: 120px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.65),
+          rgba(244, 248, 255, 0.92)
+        );
+        padding: 22px;
+        line-height: 1.85;
+        font-size: 15px;
+        color: var(--sub);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 4px;
+        }
+
+        .birthday-card {
+          padding: 16px;
+        }
+
+        .birthday-name {
+          font-size: 19px;
+        }
+
+        .birthday-note {
+          font-size: 13px;
+        }
+
+        .birthday-search,
+        .birthday-sort {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="birthday-shell">
+      <div class="birthday-controls">
+        <input
+          type="text"
+          id="birthdaySearch"
+          class="birthday-search"
+          placeholder="이름 검색 예: 박세하, 김노아"
+          oninput="renderBirthday()"
+        />
+
+        <select
+          id="birthdaySort"
+          class="birthday-sort"
+          onchange="renderBirthday()"
+        >
+          <option value="date">생일 날짜순</option>
+          <option value="name">이름순</option>
+        </select>
+      </div>
+
+      <div class="birthday-meta" id="birthdayMeta">총 0명</div>
+
+      <div class="birthday-wrap" id="birthdayWrap"></div>
+    </div>
+    <script src="../info/profile.js"></script>
+    <script src="../js/birthday_data.js"></script>
+
+    <script>
+      function pad2(n) {
+        return String(n).padStart(2, "0");
+      }
+
+      function isToday(item) {
+        const today = new Date();
+        return (
+          item.month === today.getMonth() + 1 && item.day === today.getDate()
+        );
+      }
+
+      function sortRecords(records, sortType) {
+        const copied = [...records];
+
+        if (sortType === "name") {
+          copied.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+        } else {
+          copied.sort((a, b) => {
+            if (a.month !== b.month) return a.month - b.month;
+            return a.day - b.day;
+          });
+        }
+
+        return copied;
+      }
+
+      function filterRecords(records, keyword) {
+        if (!keyword) return [...records];
+        return records.filter((item) => item.name.includes(keyword));
+      }
+
+      function makeCard(item) {
+        const today = isToday(item);
+
+        return `
+          <article class="birthday-card ${today ? "today" : ""}">
+            <div class="birthday-date">${pad2(item.month)}.${pad2(item.day)}</div>
+            <div class="birthday-name">${item.name}</div>
+            ${
+              today && item.note
+                ? `<div class="birthday-note">${item.note}</div>`
+                : ""
+            }
+          </article>
+        `;
+      }
+
+      function makeSection(title, records) {
+        if (!records.length) {
+          return `
+            <section class="birthday-group">
+              <div class="birthday-group-title">${title} (0명)</div>
+              <div class="birthday-empty">해당하는 생일 정보가 없습니다.</div>
+            </section>
+          `;
+        }
+
+        return `
+          <section class="birthday-group">
+            <div class="birthday-group-title">${title} (${records.length}명)</div>
+            <div class="birthday-group-list">
+              ${records.map(makeCard).join("")}
+            </div>
+          </section>
+        `;
+      }
+
+      function renderBirthday() {
+        const wrap = document.getElementById("birthdayWrap");
+        const meta = document.getElementById("birthdayMeta");
+        const keyword = document.getElementById("birthdaySearch").value.trim();
+        const sortType = document.getElementById("birthdaySort").value;
+
+        const students = sortRecords(
+          filterRecords(birthdayData.students, keyword),
+          sortType,
+        );
+
+        const teachers = sortRecords(
+          filterRecords(birthdayData.teachers, keyword),
+          sortType,
+        );
+
+        const total = students.length + teachers.length;
+
+        meta.textContent = `총 ${total}명 · 학생 ${students.length}명 · 선생님 ${teachers.length}명`;
+
+        if (total === 0) {
+          wrap.innerHTML = `
+            <div class="birthday-empty">
+              검색된 생일 정보가 없습니다.
+            </div>
+          `;
+          return;
+        }
+
+        wrap.innerHTML = `
+          ${makeSection("학생 모음", students)}
+          ${makeSection("선생님 모음", teachers)}
+        `;
+      }
+
+      renderBirthday();
+    </script>
+  </body>
+</html>

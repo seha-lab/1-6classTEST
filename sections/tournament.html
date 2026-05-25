@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../scrollbar.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 18px;
+        background: transparent;
+        font-family: "Pretendard", "Malgun Gothic", sans-serif;
+        color: #1a2540;
+      }
+
+      .app-shell {
+        display: grid;
+        gap: 16px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .back-btn {
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        background: linear-gradient(135deg, #eef3ff, #f2fbff);
+        color: #4f69b9;
+        box-shadow: 0 8px 18px rgba(88, 109, 165, 0.08);
+        display: none;
+      }
+
+      .back-btn.show {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .page-title-box {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .page-kicker {
+        font-size: 12px;
+        font-weight: 900;
+        color: #5d77c2;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+
+      .page-title {
+        font-size: 28px;
+        font-weight: 900;
+        margin: 0;
+        color: #1a2540;
+      }
+
+      .page-desc {
+        margin-top: 8px;
+        color: #657393;
+        line-height: 1.7;
+        font-size: 14px;
+      }
+
+      .search-box {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.96),
+          rgba(244, 248, 255, 0.96)
+        );
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        border-radius: 18px;
+        padding: 12px 14px;
+        box-shadow: 0 8px 18px rgba(88, 109, 165, 0.06);
+      }
+
+      .search-input {
+        width: 100%;
+        border: none;
+        outline: none;
+        background: transparent;
+        font: inherit;
+        font-size: 15px;
+        color: #1a2540;
+      }
+
+      .search-input::placeholder {
+        color: #8a97b3;
+      }
+
+      .list-view,
+      .detail-view {
+        display: none;
+      }
+
+      .list-view.active,
+      .detail-view.active {
+        display: block;
+      }
+
+      .tournament-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .tournament-card {
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        border-radius: 22px;
+        padding: 18px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.96),
+          rgba(244, 248, 255, 0.96)
+        );
+        box-shadow: 0 8px 18px rgba(88, 109, 165, 0.06);
+        cursor: pointer;
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.18s ease;
+      }
+
+      .tournament-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(88, 109, 165, 0.1);
+      }
+
+      .tournament-name {
+        font-size: 19px;
+        font-weight: 900;
+        color: #243252;
+        margin-bottom: 8px;
+      }
+
+      .tournament-meta {
+        font-size: 14px;
+        color: #657393;
+        line-height: 1.7;
+      }
+
+      .empty-state {
+        border: 1px dashed rgba(122, 143, 191, 0.24);
+        border-radius: 20px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.65);
+        color: #73819d;
+        line-height: 1.8;
+        font-size: 14px;
+      }
+
+      .tournament-card-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .round-card {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.96),
+          rgba(244, 248, 255, 0.96)
+        );
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        border-radius: 20px;
+        padding: 16px;
+        box-shadow: 0 8px 18px rgba(88, 109, 165, 0.06);
+      }
+
+      .round-title {
+        margin: 0 0 10px;
+        font-size: 18px;
+        font-weight: 900;
+        color: #243252;
+      }
+
+      .round-title:not(:first-child) {
+        margin-top: 18px;
+      }
+
+      .match-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: white;
+        border: 1px solid rgba(122, 143, 191, 0.12);
+        margin-bottom: 8px;
+        font-weight: 700;
+        line-height: 1.6;
+      }
+
+      .match-item:last-child {
+        margin-bottom: 0;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 14px;
+        }
+
+        .page-title {
+          font-size: 24px;
+        }
+
+        .tournament-name {
+          font-size: 17px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="topbar">
+        <button class="back-btn" id="backBtn" onclick="goToList()">←</button>
+
+        <div class="page-title-box">
+          <div class="page-kicker">TOURNAMENT</div>
+          <h1 class="page-title" id="mainTitle">대회 선택</h1>
+          <div class="page-desc" id="mainDesc">
+            보고 싶은 대회를 선택하세요. 아래 검색창에서 대회 이름으로 찾을 수
+            있습니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="list-view active" id="listView">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="대회 이름 검색 예: 피구, 축구, 계주"
+            oninput="renderTournamentList()"
+          />
+        </div>
+        <br />
+
+        <div class="tournament-list" id="tournamentList"></div>
+      </div>
+
+      <div class="detail-view" id="detailView">
+        <div class="tournament-card-list" id="detailContent"></div>
+      </div>
+    </div>
+
+    <script>
+      const tournaments = [
+        {
+          id: "dodgeball",
+          name: "피구대회",
+          desc: "3/23~3/27 진행된 피구대회 기록입니다.",
+          rounds: [
+            {
+              title: "8강",
+              items: [
+                "1반 vs 8반 3/23",
+                "4반 vs 5반 3/23",
+                "2반 vs 7반 3/24",
+                "3반 vs 6반 3/24",
+              ],
+            },
+            {
+              title: "4강",
+              items: ["1반 vs 2반 3/25", "4반 vs 5반 3/25"],
+            },
+            {
+              title: "3,4위전",
+              items: ["2반 vs 5반 3/27"],
+            },
+            {
+              title: "결승",
+              items: ["1반 vs 4반 3/27"],
+            },
+            {
+              title: "순위",
+              items: [
+                "🥇 1위 : 1반",
+                "🥈 2위 : 4반",
+                "🥉 3위 : 몰라서 안씀 반",
+                "4위 : 몰라서 안씀 반",
+                "공동 5위 : 8반, 4반, 7반, 6반",
+              ],
+            },
+          ],
+        },
+      ];
+
+      const listView = document.getElementById("listView");
+      const detailView = document.getElementById("detailView");
+      const tournamentList = document.getElementById("tournamentList");
+      const detailContent = document.getElementById("detailContent");
+      const searchInput = document.getElementById("searchInput");
+      const backBtn = document.getElementById("backBtn");
+      const mainTitle = document.getElementById("mainTitle");
+      const mainDesc = document.getElementById("mainDesc");
+
+      function renderTournamentList() {
+        const keyword = searchInput.value.trim().toLowerCase();
+
+        const filtered = tournaments.filter((tournament) =>
+          tournament.name.toLowerCase().includes(keyword),
+        );
+
+        tournamentList.innerHTML = "";
+
+        if (filtered.length === 0) {
+          tournamentList.innerHTML = `
+            <div class="empty-state">
+              검색된 대회가 없습니다.<br />
+              다른 이름으로 다시 검색해보세요.
+            </div>
+          `;
+          return;
+        }
+
+        filtered.forEach((tournament) => {
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = "tournament-card";
+          card.onclick = () => openTournament(tournament.id);
+
+          card.innerHTML = `
+            <div class="tournament-name">${tournament.name}</div>
+            <div class="tournament-meta">${tournament.desc}</div>
+          `;
+
+          tournamentList.appendChild(card);
+        });
+      }
+
+      function openTournament(id) {
+        const tournament = tournaments.find((item) => item.id === id);
+        if (!tournament) return;
+
+        listView.classList.remove("active");
+        detailView.classList.add("active");
+        backBtn.classList.add("show");
+
+        mainTitle.textContent = tournament.name;
+        mainDesc.textContent =
+          "왼쪽 상단 뒤로가기 버튼을 누르면 대회 선택 화면으로 돌아갑니다.";
+
+        detailContent.innerHTML = "";
+
+        tournament.rounds.forEach((round) => {
+          const roundCard = document.createElement("div");
+          roundCard.className = "round-card";
+
+          const itemsHtml = round.items
+            .map((item) => `<div class="match-item">${item}</div>`)
+            .join("");
+
+          roundCard.innerHTML = `
+            <h3 class="round-title">${round.title}</h3>
+            ${itemsHtml}
+          `;
+
+          detailContent.appendChild(roundCard);
+        });
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function goToList() {
+        detailView.classList.remove("active");
+        listView.classList.add("active");
+        backBtn.classList.remove("show");
+
+        mainTitle.textContent = "대회 선택";
+        mainDesc.textContent =
+          "보고 싶은 대회를 선택하세요. 아래 검색창에서 대회 이름으로 찾을 수 있습니다.";
+      }
+
+      renderTournamentList();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../scrollbar.css" />
+
+    <style>
+      body {
+        margin: 0;
+        padding: 18px;
+        background: transparent;
+        font-family: "Pretendard", "Malgun Gothic", sans-serif;
+        color: #1a2540;
+      }
+
+      .home-shell {
+        display: grid;
+        gap: 16px;
+      }
+
+      .home-head {
+        background: linear-gradient(135deg, #f7faff, #eef5ff);
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        border-radius: 24px;
+        padding: 20px;
+      }
+
+      .home-kicker {
+        font-size: 12px;
+        font-weight: 900;
+        color: #5d77c2;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .home-title-main {
+        font-size: 24px;
+        font-weight: 900;
+        color: #243252;
+        margin-bottom: 8px;
+      }
+
+      .home-desc {
+        color: #657393;
+        line-height: 1.8;
+        font-size: 15px;
+      }
+
+      .timetable-card {
+        margin-top: 12px;
+        background: rgba(255, 255, 255, 0.82);
+        border-radius: 20px;
+        padding: 14px;
+        overflow-x: auto;
+      }
+
+      .table-title {
+        font-size: 16px;
+        font-weight: 900;
+        margin-bottom: 12px;
+        color: #31457a;
+      }
+
+      .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 14px;
+        min-width: 520px;
+      }
+
+      .schedule-table th {
+        background: #edf3ff;
+        color: #4862b5;
+        font-size: 14px;
+        padding: 10px;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .schedule-table td {
+        border-top: 1px solid rgba(122, 143, 191, 0.14);
+        padding: 10px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1a2540;
+        background: rgba(255, 255, 255, 0.7);
+        white-space: nowrap;
+      }
+
+      .today-highlight {
+        background: #eef6ff !important;
+        font-weight: 900;
+        color: #3053cc !important;
+      }
+
+      .home-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .home-section-title {
+        font-size: 20px;
+        font-weight: 900;
+        color: #243252;
+        padding: 0 4px;
+      }
+
+      .home-card {
+        background: white;
+        border: 1px solid rgba(122, 143, 191, 0.14);
+        border-radius: 22px;
+        padding: 18px;
+        box-shadow: 0 10px 24px rgba(88, 109, 165, 0.06);
+      }
+
+      .home-date {
+        display: inline-block;
+        margin-bottom: 10px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #eef3ff, #f2fbff);
+        color: #4e69ba;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .home-title {
+        font-size: 20px;
+        font-weight: 900;
+        margin-bottom: 8px;
+        color: #1a2540;
+      }
+
+      .home-body {
+        color: #657393;
+        line-height: 1.8;
+        font-size: 15px;
+        white-space: pre-line;
+      }
+
+      .empty-state {
+        border: 1px dashed rgba(122, 143, 191, 0.24);
+        border-radius: 20px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.7);
+        color: #73819d;
+        line-height: 1.8;
+        font-size: 14px;
+        text-align: center;
+      }
+    </style>
+
+    <script src="../info/home.js"></script>
+    <script src="../info/profile.js"></script>
+    <script src="../js/birthday_data.js"></script>
+  </head>
+
+  <body>
+    <div class="home-shell">
+      <div class="home-head">
+        <div class="home-kicker">TODAY</div>
+        <div class="home-title-main">오늘은...</div>
+        <div class="home-desc">
+          오늘과 이번 주 정보를 한눈에 보는 공간입니다.
+        </div>
+
+        <div class="timetable-card">
+          <div class="table-title">📚 오늘의 시간표</div>
+          <div id="todayTimetable"></div>
+        </div>
+
+        <div class="timetable-card">
+          <div class="table-title">🗓️ 이번 주 시간표</div>
+          <div id="weekTimetable"></div>
+        </div>
+      </div>
+
+      <div class="home-section-title">이번 주 일정</div>
+      <div class="home-list" id="homeSchedule"></div>
+    </div>
+
+    <script>
+      const homeSchedule = document.getElementById("homeSchedule");
+      const todayTimetable = document.getElementById("todayTimetable");
+      const weekTimetable = document.getElementById("weekTimetable");
+
+      const dayKeys = [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+      ];
+
+      const dayLabels = {
+        monday: "월",
+        tuesday: "화",
+        wednesday: "수",
+        thursday: "목",
+        friday: "금",
+      };
+
+      function normalizeDate(date) {
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      }
+
+      function getThisWeekRange() {
+        const today = normalizeDate(new Date());
+        const day = today.getDay();
+        const mondayDiff = day === 0 ? -6 : 1 - day;
+
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + mondayDiff);
+
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        return { monday, sunday };
+      }
+
+      function parseMonthDay(text) {
+        const match = String(text || "").match(/(\d{1,2})\/(\d{1,2})/);
+        if (!match) return null;
+
+        return {
+          month: Number(match[1]),
+          day: Number(match[2]),
+        };
+      }
+
+      function getDateFromMonthDay(month, day) {
+        const today = new Date();
+        return normalizeDate(new Date(today.getFullYear(), month - 1, day));
+      }
+
+      function isThisWeekDate(month, day) {
+        const target = getDateFromMonthDay(month, day);
+        const { monday, sunday } = getThisWeekRange();
+
+        return target >= monday && target <= sunday;
+      }
+
+      function isThisWeekSchedule(item) {
+        const parsed = parseMonthDay(item.date);
+        if (!parsed) return false;
+
+        return isThisWeekDate(parsed.month, parsed.day);
+      }
+
+      function getThisWeekBirthdayEvents() {
+        const students = birthdayData.students.map((person) => ({
+          ...person,
+          type: "student",
+        }));
+
+        const teachers = birthdayData.teachers.map((person) => ({
+          ...person,
+          type: "teacher",
+        }));
+
+        return [...students, ...teachers]
+          .filter((person) => isThisWeekDate(person.month, person.day))
+          .map((person) => {
+            const isTeacher = person.type === "teacher";
+            const displayName = isTeacher
+              ? `${person.name} 선생님`
+              : person.name;
+
+            return {
+              date: `${person.month}/${person.day}`,
+              title: `${displayName} 생일`,
+              body: isTeacher
+                ? `${displayName}의 생신입니다. 🎂`
+                : `${displayName}의 생일입니다. 다 같이 축하해 주세요! 🎉`,
+            };
+          });
+      }
+
+      function getSortValue(item) {
+        const parsed = parseMonthDay(item.date);
+        if (!parsed) return 0;
+        return parsed.month * 100 + parsed.day;
+      }
+
+      function escapeHtml(text) {
+        return String(text)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function renderTimetable() {
+        const today = new Date();
+        const todayKey = dayKeys[today.getDay()];
+        const safeTimetable = typeof timetable === "object" ? timetable : {};
+
+        const todaySubjects = safeTimetable[todayKey];
+
+        if (!todaySubjects) {
+          todayTimetable.innerHTML = `
+            <div class="empty-state">
+              오늘은 주말입니다.
+            </div>
+          `;
+        } else {
+          todayTimetable.innerHTML = `
+            <table class="schedule-table">
+              <thead>
+                <tr>
+                  ${todaySubjects.map((_, i) => `<th>${i + 1}교시</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  ${todaySubjects
+                    .map((subject) => `<td>${escapeHtml(subject)}</td>`)
+                    .join("")}
+                </tr>
+              </tbody>
+            </table>
+          `;
+        }
+
+        const days = [
+          ["monday", "월"],
+          ["tuesday", "화"],
+          ["wednesday", "수"],
+          ["thursday", "목"],
+          ["friday", "금"],
+        ];
+
+        const maxPeriod = Math.max(
+          ...days.map(([key]) => (safeTimetable[key] || []).length),
+        );
+
+        let weekHtml = `
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th>교시</th>
+                ${days.map(([, label]) => `<th>${label}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        for (let i = 0; i < maxPeriod; i++) {
+          weekHtml += `<tr>`;
+          weekHtml += `<td>${i + 1}교시</td>`;
+
+          days.forEach(([key]) => {
+            const subject = safeTimetable[key]?.[i] || "-";
+            const cls = key === todayKey ? "today-highlight" : "";
+
+            weekHtml += `
+              <td class="${cls}">
+                ${escapeHtml(subject)}
+              </td>
+            `;
+          });
+
+          weekHtml += `</tr>`;
+        }
+
+        weekHtml += `
+            </tbody>
+          </table>
+        `;
+
+        weekTimetable.innerHTML = weekHtml;
+      }
+
+      function renderHomeSchedule() {
+        const normalSchedules = Array.isArray(weeklySchedule)
+          ? weeklySchedule.filter(isThisWeekSchedule)
+          : [];
+
+        const birthdaySchedules = getThisWeekBirthdayEvents();
+
+        const schedules = [...normalSchedules, ...birthdaySchedules].sort(
+          (a, b) => getSortValue(a) - getSortValue(b),
+        );
+
+        if (schedules.length === 0) {
+          homeSchedule.innerHTML = `
+            <div class="empty-state">
+              이번 주 일정이 없습니다.
+            </div>
+          `;
+          return;
+        }
+
+        homeSchedule.innerHTML = schedules
+          .map(
+            (item) => `
+              <article class="home-card">
+                <div class="home-date">${escapeHtml(item.date)}</div>
+                <div class="home-title">${escapeHtml(item.title)}</div>
+                <div class="home-body">${escapeHtml(item.body)}</div>
+              </article>
+            `,
+          )
+          .join("");
+      }
+
+      renderTimetable();
+      renderHomeSchedule();
+    </script>
+  </body>
+</html>

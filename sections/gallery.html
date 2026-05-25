@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>갤러리</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg1: #f3f7ff;
+        --bg2: #edf8ff;
+        --card: rgba(255, 255, 255, 0.9);
+        --line: rgba(120, 145, 210, 0.16);
+        --text: #1a2540;
+        --sub: #657393;
+        --accent: #6d8dff;
+        --accent2: #8fd2ff;
+        --shadow: 0 16px 40px rgba(88, 111, 175, 0.12);
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Pretendard", "Malgun Gothic", sans-serif;
+        color: var(--text);
+        background: transparent;
+      }
+
+      body {
+        padding: 6px;
+      }
+
+      .gallery-wrap {
+        display: grid;
+        gap: 16px;
+      }
+
+      .gallery-card {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.96),
+          rgba(244, 248, 255, 0.96)
+        );
+        border: 1px solid rgba(130, 150, 205, 0.14);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .gallery-image {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        display: block;
+        background: #e9f0ff;
+      }
+
+      .gallery-content {
+        padding: 16px;
+      }
+
+      .gallery-date {
+        display: inline-block;
+        margin-bottom: 10px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #eef3ff, #f1fbff);
+        color: #4d69bc;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .gallery-title {
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.35;
+        margin-bottom: 8px;
+      }
+
+      .gallery-desc {
+        font-size: 14px;
+        line-height: 1.75;
+        color: var(--sub);
+        white-space: pre-line;
+      }
+
+      .gallery-empty {
+        border: 2px dashed rgba(122, 143, 191, 0.22);
+        border-radius: 22px;
+        min-height: 160px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.65),
+          rgba(244, 248, 255, 0.92)
+        );
+        padding: 22px;
+        line-height: 1.85;
+        font-size: 15px;
+        color: var(--sub);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 4px;
+        }
+
+        .gallery-content {
+          padding: 14px;
+        }
+
+        .gallery-title {
+          font-size: 18px;
+        }
+
+        .gallery-desc {
+          font-size: 13px;
+        }
+
+        .gallery-image {
+          aspect-ratio: 4 / 3;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="gallery-wrap" id="galleryWrap"></div>
+    <script src="../info/gallery.js"></script>
+
+    <script>
+      function escapeHtml(text) {
+        return String(text)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function renderGallery() {
+        const wrap = document.getElementById("galleryWrap");
+
+        if (!galleryData.length) {
+          wrap.innerHTML = `
+            <div class="gallery-empty">
+              아직 등록된 사진이 없습니다.
+            </div>
+          `;
+          return;
+        }
+
+        wrap.innerHTML = galleryData
+          .map(
+            (item) => `
+              <article class="gallery-card">
+                <img
+                  class="gallery-image"
+                  src="${escapeHtml(item.image)}"
+                  alt="${escapeHtml(item.title)}"
+                  loading="lazy"
+                />
+                <div class="gallery-content">
+                  <div class="gallery-date">${escapeHtml(item.date)}</div>
+                  <div class="gallery-title">${escapeHtml(item.title)}</div>
+                  <div class="gallery-desc">${escapeHtml(item.desc)}</div>
+                </div>
+              </article>
+            `,
+          )
+          .join("");
+      }
+
+      renderGallery();
+    </script>
+  </body>
+</html>

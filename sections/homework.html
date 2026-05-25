@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>과제</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: "Pretendard", "Malgun Gothic", sans-serif;
+        background: #f7f9ff;
+        color: #1f2937;
+      }
+
+      .wrap {
+        width: min(920px, 100%);
+        margin: 0 auto;
+      }
+
+      .top {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .title {
+        font-size: 28px;
+        font-weight: 800;
+      }
+
+      .desc {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .search-box {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .search-input {
+        flex: 1 1 260px;
+        min-width: 0;
+        border: 1px solid #dbe3f0;
+        border-radius: 14px;
+        padding: 13px 14px;
+        font-size: 15px;
+        outline: none;
+        background: #ffffff;
+      }
+
+      .search-input:focus {
+        border-color: #7c9cff;
+        box-shadow: 0 0 0 4px rgba(124, 156, 255, 0.14);
+      }
+
+      .sort-select {
+        border: 1px solid #dbe3f0;
+        border-radius: 14px;
+        padding: 13px 14px;
+        font-size: 15px;
+        outline: none;
+        background: #ffffff;
+        color: #1f2937;
+        cursor: pointer;
+      }
+
+      .meta {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 14px;
+      }
+
+      .homework-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+      }
+
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+
+      .card-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.5;
+      }
+
+      .due {
+        flex-shrink: 0;
+        font-size: 13px;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 8px 12px;
+      }
+
+      .card-body {
+        font-size: 15px;
+        line-height: 1.8;
+        color: #374151;
+        white-space: pre-line;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 28px 16px;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px dashed #cbd5e1;
+        color: #64748b;
+      }
+
+      .late {
+        background: #fff1f2;
+        color: #be123c;
+      }
+
+      .soon {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+
+      .normal {
+        background: #eef4ff;
+        color: #334155;
+      }
+
+      mark {
+        background: linear-gradient(135deg, #eef3ff, #dff4ff);
+        color: #2a3f8f;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-weight: 800;
+      }
+
+      .rich-gray {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 8px;
+        background: #eef1f5;
+        color: #475569;
+        font-weight: 700;
+      }
+
+      .rich-highlight {
+        padding: 2px 6px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #fff7a8, #ffe76a);
+        color: #4b3f00;
+        font-weight: 800;
+      }
+
+      .rich-bold {
+        font-weight: 900;
+      }
+
+      .rich-italic {
+        font-style: italic;
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 14px;
+        }
+
+        .title {
+          font-size: 24px;
+        }
+
+        .card {
+          padding: 15px;
+        }
+
+        .card-title {
+          font-size: 18px;
+        }
+
+        .sort-select {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div class="title">📚 과제</div>
+        <div class="desc">제목, 내용, 날짜로 검색할 수 있습니다.</div>
+
+        <div class="search-box">
+          <input
+            id="searchInput"
+            class="search-input"
+            type="text"
+            placeholder="검색 예: 영어, 사진, 4/9"
+            oninput="renderHomework()"
+          />
+
+          <select
+            id="sortSelect"
+            class="sort-select"
+            onchange="renderHomework()"
+          >
+            <option value="latest">최신순</option>
+            <option value="oldest">과거순</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="meta" id="metaText">총 0개의 과제</div>
+      <div class="homework-list" id="homeworkList"></div>
+    </div>
+
+    <script>
+      const homeworkData = [
+        {
+          title: "영어(주제)",
+          due: "4/9",
+          content: "!!기사!!에 넣을 $$사진$$ 2~3장 찍어오기",
+        },
+        {
+          title: "수학(주제) 수행평가",
+          due: "4/8",
+          content: "$$수학 사전 만들기$$ - !!공개수업 및 수행평가!!",
+        },
+        {
+          title: "기가(주제) 수행평가",
+          due: "4/9",
+          content:
+            "$$네옴시티$$(더 라인, 옥사곤, 트로제나) 조사하고 상상하여 그림으로 나타내기",
+        },
+        {
+          title: "도덕시간 벚꽃 구경!",
+          due: "4/6",
+          content:
+            "$$월요일 도덕시간$$에 !!벚꽃 구경!!함 교복을 입고오지 않으면 그냥 공부하니 !!꼭 교복을 입고(챙기거나) 올 것!!!",
+        },
+      ];
+
+      function escapeHtml(text) {
+        return String(text)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function applyRichText(text) {
+        return text
+          .replace(/\$\$(.*?)\$\$/g, '<span class="rich-bold">$1</span>')
+          .replace(/%%(.*?)%%/g, '<span class="rich-italic">$1</span>')
+          .replace(/\*\*(.*?)\*\*/g, '<span class="rich-gray">$1</span>')
+          .replace(/!!(.*?)!!/g, '<span class="rich-highlight">$1</span>');
+      }
+
+      function highlightText(text, keyword) {
+        let safeText = escapeHtml(text);
+        safeText = applyRichText(safeText);
+
+        if (!keyword) return safeText.replace(/\n/g, "<br />");
+
+        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`(${escapedKeyword})`, "gi");
+
+        return safeText
+          .replace(regex, "<mark>$1</mark>")
+          .replace(/\n/g, "<br />");
+      }
+
+      function parseMonthDay(text) {
+        const match = String(text)
+          .trim()
+          .match(/^(\d{1,2})\/(\d{1,2})$/);
+
+        if (!match) return null;
+
+        return {
+          month: Number(match[1]),
+          day: Number(match[2]),
+        };
+      }
+
+      function parseDueDate(dueText) {
+        const parsed = parseMonthDay(dueText);
+
+        if (!parsed) {
+          return new Date(2026, 0, 1);
+        }
+
+        return new Date(2026, parsed.month - 1, parsed.day);
+      }
+
+      function getDueStatusClass(dueText) {
+        const parsed = parseMonthDay(dueText);
+        if (!parsed) return "normal";
+
+        const today = new Date();
+        const current = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+        );
+
+        const dueDate = new Date(
+          today.getFullYear(),
+          parsed.month - 1,
+          parsed.day,
+        );
+
+        const diff = Math.floor((dueDate - current) / (1000 * 60 * 60 * 24));
+
+        if (diff < 0) return "late";
+        if (diff <= 3) return "soon";
+        return "normal";
+      }
+
+      function renderHomework() {
+        const keyword = document
+          .getElementById("searchInput")
+          .value.trim()
+          .toLowerCase();
+
+        const sortType = document.getElementById("sortSelect").value;
+        const list = document.getElementById("homeworkList");
+        const meta = document.getElementById("metaText");
+
+        let filtered = homeworkData.filter((item) => {
+          const target =
+            `${item.title} ${item.content} ${item.due}`.toLowerCase();
+          return target.includes(keyword);
+        });
+
+        filtered.sort((a, b) => {
+          const dateA = parseDueDate(a.due);
+          const dateB = parseDueDate(b.due);
+
+          if (sortType === "latest") {
+            return dateB - dateA;
+          }
+
+          return dateA - dateB;
+        });
+
+        meta.textContent = `총 ${filtered.length}개의 과제`;
+        list.innerHTML = "";
+
+        if (filtered.length === 0) {
+          list.innerHTML = `<div class="empty">검색 결과가 없습니다.</div>`;
+          return;
+        }
+
+        filtered.forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          card.innerHTML = `
+            <div class="card-head">
+              <div class="card-title">${highlightText(item.title, keyword)}</div>
+              <div class="due ${getDueStatusClass(item.due)}">${highlightText(item.due, keyword)}</div>
+            </div>
+            <div class="card-body">${highlightText(item.content, keyword)}</div>
+          `;
+
+          list.appendChild(card);
+        });
+      }
+
+      renderHomework();
+    </script>
+  </body>
+</html>
